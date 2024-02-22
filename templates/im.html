@@ -65,7 +65,7 @@
     </div>
 </div>
 <script>
-    var ws = new WebSocket("ws://localhost:8084/ws");
+    var ws = new WebSocket("ws://81.71.47.194/:8084/ws");
     ws.onmessage = function(event) {
         var message = event.data;
         var chatBox = document.getElementById("chat-box");
