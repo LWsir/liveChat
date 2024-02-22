@@ -84,6 +84,7 @@
             input.value = "";
         }
     }
+    document.onkeydown = function () { var e = window.event || arguments.callee.caller.arguments[0]; e.keyCode === 13 && sendMessage(); };
 </script>
 </body>
 </html>
