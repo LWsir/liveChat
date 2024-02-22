@@ -65,11 +65,11 @@
 <body>
 <div class="container">
     <h2>Login</h2>
-    <form action="#" method="POST">
+    <form action="login" method="POST">
         <input type="text" name="username" placeholder="Username" required><br>
         <input type="password" name="password" placeholder="Password" required><br>
         <div class="captcha">
-            <input type="text" name="captcha" placeholder="Enter Captcha" required>
+            <input type="text" name="code" placeholder="Enter Captcha" required>
             <img src="captcha.png" alt="Captcha" onclick="this.src='captcha.png?' + Math.random()" title="Click to refresh">
         </div>
         <button type="submit">Login</button>

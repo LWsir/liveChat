@@ -99,10 +99,23 @@ func main() {
 		})
 
 	})
-	router.GET("/captcha/verify/:value", func(c *gin.Context) {
-		value := c.Param("value")
-		if CaptchaVerify(c, value) {
-			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "success"})
+
+	router.POST("/login", func(c *gin.Context) {
+		userName := c.PostForm("username")
+		password := c.PostForm("password")
+		code := c.PostForm("code")
+		isLogin := false
+
+		if userName == "abner" && password == "123" {
+			if CaptchaVerify(c, code) {
+				isLogin = true
+			}
+		}
+
+		if isLogin {
+			c.HTML(http.StatusOK, "im.html", gin.H{
+				"title": "这是聊天页",
+			})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"status": 1, "msg": "failed"})
 		}
