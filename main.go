@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"liveChat/Utils"
+	"liveChat/model"
 	"net/http"
 	"time"
 
@@ -85,7 +87,6 @@ func Serve(w http.ResponseWriter, r *http.Request, id, ext, lang string, downloa
 	http.ServeContent(w, r, id+ext, time.Time{}, bytes.NewReader(content.Bytes()))
 	return nil
 }
-
 func main() {
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
@@ -119,6 +120,93 @@ func main() {
 		} else {
 			c.JSON(http.StatusOK, gin.H{"status": 1, "msg": "failed"})
 		}
+	})
+
+	router.POST("/register", func(c *gin.Context) {
+		//写一个注册
+		type User struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+
+		var newUser User
+
+		if err := c.ShouldBindJSON(&newUser); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -1,
+				"msg":  "参数校验失败",
+				"data": "",
+			})
+			return
+		}
+
+		db_abner, err := Utils.InitDB("abner", "root", "123456", "127.0.0.1", 3306)
+
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -2,
+				"msg":  err.Error(),
+				"data": "",
+			})
+			return
+		}
+
+		defer db_abner.Close()
+
+		var userdb []model.UserDB
+
+		// 转换 sql ，doris 比较特殊，用 gorm 的查询语句会报错Unsupported command(COM_STMT_PREPARE)
+		sql := fmt.Sprintf("select * from t_users where user_name = '%s' ", newUser.Username)
+
+		fmt.Printf(sql)
+
+		err = db_abner.Raw(sql).Scan(&userdb).Error
+
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -3,
+				"msg":  err.Error(),
+				"data": "",
+			})
+			return
+		}
+
+		if len(userdb) < 1 {
+			insertUserDB := model.UserDB{
+				UserName:    newUser.Username,
+				Password:    newUser.Password,
+				Email:       "",
+				PhoneNumber: "",
+				CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+				UpdatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+				State:       0,
+			}
+			result := db_abner.Table("t_users").Create(&insertUserDB)
+
+			if result.Error != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"code": -4,
+					"msg":  result.Error.Error(),
+					"data": "",
+				})
+				return
+			}
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -5,
+				"msg":  newUser.Username + "已被注册",
+				"data": userdb[0].PhoneNumber,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"msg":  newUser.Username + "注册成功",
+			"data": "",
+		})
+		return
+
 	})
 	router.Run(":8083")
 }

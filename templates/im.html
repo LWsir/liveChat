@@ -35,16 +35,14 @@
 
         .message-container {
             display: flex;
-            align-items:  center; ;
+            align-items: center;
             margin-bottom: 10px;
         }
 
-        /* 消息在左边 */
         .message-container:not(.is-self) {
             justify-content: flex-start;
         }
 
-        /* 消息在右边 */
         .message-container.is-self {
             justify-content: flex-end;
         }
@@ -53,14 +51,14 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #ccc; /* Placeholder color */
+            background-color: #ccc;
             margin-right: 10px;
         }
 
         .nickname {
             font-weight: bold;
-            color: #007bff; /* 修改昵称颜色 */
-            font-size: 14px; /* 修改昵称字体大小 */
+            color: #007bff;
+            font-size: 14px;
             margin-right: 5px;
         }
 
@@ -68,7 +66,28 @@
             padding: 10px;
             background-color: #f2f2f2;
             border-radius: 5px;
+            max-width: 60px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
+
+        .message-container:hover .message-text {
+            white-space: normal !important;
+            overflow: visible !important;
+            max-width: none !important;
+            z-index: 9999;
+            position: relative;
+        }
+
+
+        /*.message-container:hover .message-text {*/
+        /*    max-width: none;*/
+        /*    white-space: normal;*/
+        /*    overflow: visible;*/
+        /*    z-index: 1;*/
+        /*    position: relative;*/
+        /*}*/
 
         input[type="text"] {
             flex: 1;
@@ -104,40 +123,35 @@
 </div>
 <script>
     var ws = new WebSocket("ws://81.71.47.194:8084/ws");
-    // 声明全局变量 robot
     var robot = "机器人";
     var self_name = "";
+
     ws.onmessage = function(event) {
-        var message = JSON.parse(event.data); // Parse the incoming JSON data
+        var message = JSON.parse(event.data);
         var chatBox = document.getElementById("chat-box");
         var messageContainer = document.createElement("div");
         messageContainer.classList.add("message-container");
 
-        var isself = false
+        var isself = false;
 
         if (message.nickname === self_name) {
-            isself = true
+            isself = true;
         }
 
-        // 根据 isself 字段的值添加类名
         if (isself) {
             messageContainer.classList.add("is-self");
         }
 
-        // Create and append avatar element
         var avatar = document.createElement("div");
         avatar.classList.add("avatar");
         avatar.style.backgroundImage = "url('" + message.avatar + "')";
-        // avatar.style.backgroundImage = "url('https://img1.baidu.com/it/u=3314132085,944825934&fm=253&fmt=auto&app=138&f=JPEG?w=390&h=260')";
         messageContainer.appendChild(avatar);
 
-        // Create and append nickname element
         var nickname = document.createElement("div");
-        nickname.textContent = message.nickname; // Assuming nickname is a property in your message object
+        nickname.textContent = message.nickname;
         nickname.classList.add("nickname");
         messageContainer.appendChild(nickname);
 
-        // Create and append message text element
         var messageText = document.createElement("div");
         messageText.textContent = message.text;
         messageText.classList.add("message-text");
@@ -147,41 +161,40 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     };
 
-
     function sendMessage() {
         var input = document.getElementById("input");
         var message = input.value.trim();
         var nickname = "";
-        if(self_name ===""){
-            nickname = generateRandomRobotNumber()
-            self_name = nickname
-        }else{
-            nickname = self_name
+
+        if (self_name === "") {
+            nickname = generateRandomRobotNumber();
+            self_name = nickname;
+        } else {
+            nickname = self_name;
         }
 
         if (message !== "") {
             ws.send(JSON.stringify({
                 text: message,
-                avatar:"https://img1.baidu.com/it/u=3314132085,944825934&fm=253&fmt=auto&app=138&f=JPEG?w=390&h=260",
-                nickname:nickname,
-            })); // Send message as JSON object
+                avatar: "https://img1.baidu.com/it/u=3314132085,944825934&fm=253&fmt=auto&app=138&f=JPEG?w=390&h=260",
+                nickname: nickname,
+            }));
             input.value = "";
         }
     }
 
     function generateRandomRobotNumber() {
-        // 生成随机数，这里假设生成 1 到 999 之间的随机整数
         var randomNumber = Math.floor(Math.random() * 999) + 1;
-        // 使用 padStart 方法补零，确保随机数的位数为三位
         var paddedRandomNumber = String(randomNumber).padStart(3, '0');
-        // 拼接成最终的字符串
         var robotNumber = robot + paddedRandomNumber + ":";
 
-        return robotNumber
+        return robotNumber;
     }
 
-
-    document.onkeydown = function () { var e = window.event || arguments.callee.caller.arguments[0]; e.keyCode === 13 && sendMessage(); };
+    document.onkeydown = function() {
+        var e = window.event || arguments.callee.caller.arguments[0];
+        e.keyCode === 13 && sendMessage();
+    };
 </script>
 </body>
 </html>
