@@ -89,6 +89,7 @@ func Serve(w http.ResponseWriter, r *http.Request, id, ext, lang string, downloa
 }
 func main() {
 	router := gin.Default()
+	router.Static("/static", "./static")
 	router.LoadHTMLGlob("templates/*")
 	router.Use(Session("topgoer"))
 	router.GET("/captcha.png", func(c *gin.Context) {
@@ -101,13 +102,50 @@ func main() {
 
 	})
 
+	router.GET("register_page", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "register.html", gin.H{
+			"title": "这是注册页",
+		})
+
+	})
+
 	router.POST("/login", func(c *gin.Context) {
 		userName := c.PostForm("username")
 		password := c.PostForm("password")
 		code := c.PostForm("code")
 		isLogin := false
 
-		if userName == "abner" && password == "123" {
+		db_abner, err := Utils.InitDB("abner", "root", "123456", "127.0.0.1", 3306)
+
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -1,
+				"msg":  err.Error(),
+				"data": "",
+			})
+			return
+		}
+
+		sql := fmt.Sprintf("select * from t_users where user_name = '%s'  and password = '%s'", userName, password)
+
+		fmt.Println(sql)
+
+		var userdb []model.UserDB
+
+		err = db_abner.Raw(sql).Scan(&userdb).Error
+
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": -2,
+				"msg":  err.Error(),
+				"data": "",
+			})
+			return
+		}
+
+		fmt.Println(userdb)
+
+		if len(userdb) >= 1 {
 			if CaptchaVerify(c, code) {
 				isLogin = true
 			}
@@ -115,7 +153,8 @@ func main() {
 
 		if isLogin {
 			c.HTML(http.StatusOK, "im.html", gin.H{
-				"title": "这是聊天页",
+				"title":    "这是聊天页",
+				"nickName": userName,
 			})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"status": 1, "msg": "failed"})
@@ -175,7 +214,7 @@ func main() {
 			insertUserDB := model.UserDB{
 				UserName:    newUser.Username,
 				Password:    newUser.Password,
-				Email:       "",
+				Email:       newUser.Username,
 				PhoneNumber: "",
 				CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
 				UpdatedAt:   time.Now().Format("2006-01-02 15:04:05"),

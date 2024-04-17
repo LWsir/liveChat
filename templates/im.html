@@ -167,7 +167,7 @@
         var nickname = "";
 
         if (self_name === "") {
-            nickname = generateRandomRobotNumber();
+            nickname = "{{.nickName}}";
             self_name = nickname;
         } else {
             nickname = self_name;
